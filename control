@@ -1,0 +1,9 @@
+Package: @@PACKAGENAME@@
+Name: @@HACKNAME@@
+Depends: mobilesubstrate
+Version: @@APPVERSION@@
+Architecture: iphoneos-arm
+Description: @@HACKNAME@@ mod menu made by @@USER@@ for iosgods.com
+Author: @@USER@@
+Section: Tweaks
+Homepage: https://iosgods.com
