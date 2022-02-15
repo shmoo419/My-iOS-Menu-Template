@@ -1,0 +1,102 @@
+#!/bin/sh
+
+# Made for iOSGods.com! - Version 2.1 - Visit https://github.com/iOSGods/Auto-Lipo-for-iOS-5-to-iOS-11-Binary-Only/ for an up-to-date version!
+
+
+#################################################################################
+
+iosgods_binary="/var/mobile/Documents/Binary/@@BINARYNAME@@"
+iosgods_target_directory_ios9_or_higher="/var/containers/Bundle/Application/*/@@BINARYNAME@@.app/"
+iosgods_target_directory_ios8_to_ios92x="/var/mobile/Containers/Bundle/Application/*/@@BINARYNAME@@.app/"
+iosgods_target_directory_ios7_or_lower="/var/mobile/Applications/*/@@BINARYNAME@@.app/"
+
+#################################################################################
+
+
+set -e
+
+ig_mv_perms() {
+    # Kill the app if it's running before continuing
+    killall -9 "${iosgods_binary##*/}" || :
+    
+    # Check if the specified binary exists in the location provided above, otherwise output an error
+    if [ ! -f "${iosgods_binary}" ]; then
+        printf "${iosgods_binary} file couldn't be found, please check if the specified location is correct. If the issue still persists, ask for help on iOSGods.com\\n\\n"
+        exit 1
+    fi
+
+    # Check if there is a '*' character in the target directory variable and process if that's the case
+    if [ "${iosgods_target_directory}" != "${iosgods_target_directory%%\***}" ]; then
+        base_target_directory="${iosgods_target_directory%%\***}"
+        prefix_target_directory="${iosgods_target_directory##**\*}"
+
+        # Search prefix_target_directory on base_target_directory directory
+        for t in $base_target_directory/* ; do
+            if [ -d "${t}${prefix_target_directory}" ]; then
+                # Found, replace target_directory with real path
+                iosgods_target_directory="${t}${prefix_target_directory}"
+                break
+            else
+                continue
+            fi
+        done
+    fi
+
+    if [ ! -d "${iosgods_target_directory}" ]; then
+        printf "\\n${iosgods_target_directory} directory wasn't found, please make sure you have the app installed or ask for support on iOSGods.com\\n\\n"
+        exit 1
+    fi
+
+    # Changing permissions prior to moving the binary to simplify code
+    chmod 755 "${iosgods_binary}"
+    chown mobile:mobile "${iosgods_binary}"
+
+    # Moving thinned binary to the specified app's directory
+    printf "\\n** Applying the hack...\\n"
+    mv "${iosgods_binary}" "${iosgods_target_directory}"
+}
+
+
+case "${1}" in
+    configure)
+
+        # Read sw_vers output and act upon it
+        case "$(sw_vers -productVersion)" in
+            5*|6*|7*) # If iOS 5, 6, or 7 is detected
+                printf "*************************************\\n"
+                printf "* iOS 7 or lower has been detected. *\\n"
+                printf "*************************************\\n\\n"
+
+                iosgods_target_directory="${iosgods_target_directory_ios7_or_lower}"
+                ig_mv_perms
+
+                ;;
+
+           8*|9.0*|9.1*|9.2*) # If iOS 8, 9.0.x, 9.1, 9.2.x is detected, apply the binary
+        printf "****************************************\\n"
+                printf "* iOS 8.x - 9.2.x has been detected. *\\n"
+                printf "****************************************\\n\\n"
+
+                iosgods_target_directory="${iosgods_target_directory_ios8_to_ios92x}"
+                ig_mv_perms
+                
+                ;;
+                
+    9*|10*|11*|12*) # If iOS 9.3 and higher is detected, apply the binary to the new app location
+        printf "********************************************\\n"
+        printf "* iOS 9/10/11 or higher has been detected. *\\n"
+        printf "********************************************\\n\\n"
+        
+        iosgods_target_directory="${iosgods_target_directory_ios9_or_higher}"
+        ig_mv_perms
+        
+                ;;
+        esac
+        ;;
+    abort-upgrade|abort-deconfigure|abort-remove)
+        ;;
+    *)
+        printf "%s\\n" "${0} called with unknown argument \`${1}'" 1>&2
+        exit 1
+        ;;
+esac
